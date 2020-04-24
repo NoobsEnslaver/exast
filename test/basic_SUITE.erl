@@ -34,8 +34,8 @@ all() ->
 %%--------------------------------------------------------------------
 tsma_basic(_Config) ->
     N = ?FUNCTION_NAME,
-    exast:new_tsma(N, 3),
-    ?assertError(already_registred, exast:new_tsma(N, 5)),
+    ok = exast:new_tsma(N, 3),
+    ?assertEqual({error, already_registred}, exast:new_tsma(N, 5)),
 
     ?assertEqual(0.0, exast:get(N)),
 
@@ -64,8 +64,8 @@ tsma_basic(_Config) ->
 
 ssma_basic(_Config) ->
     N = ?FUNCTION_NAME,
-    exast:new_ssma(N, 3),
-    ?assertError(already_registred, exast:new_ssma(N, 5)),
+    ok = exast:new_ssma(N, 3),
+    ?assertEqual({error, already_registred}, exast:new_ssma(N, 5)),
 
     ?assertEqual(0.0, exast:get(N)),
 
@@ -93,8 +93,8 @@ ssma_basic(_Config) ->
 
 cma_basic(_Config) ->
     N = ?FUNCTION_NAME,
-    exast:new_cma(N),
-    ?assertError(already_registred, exast:new_cma(N)),
+    ok = exast:new_cma(N),
+    ?assertEqual({error, already_registred}, exast:new_cma(N)),
 
     ?assertEqual(0.0, exast:get(N)),
 
@@ -121,8 +121,8 @@ cma_basic(_Config) ->
 
 gauge_basic(_Config) ->
     N = ?FUNCTION_NAME,
-    exast:new_gauge(N),
-    ?assertError(already_registred, exast:new_gauge(N)),
+    ok = exast:new_gauge(N),
+    ?assertEqual({error, already_registred}, exast:new_gauge(N)),
 
     ?assertEqual(0.0, exast:get(N)),
 
