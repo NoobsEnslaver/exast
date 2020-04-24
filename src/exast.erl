@@ -17,23 +17,28 @@
          delete/1]).
 
 -define(KEY(Name), {?MODULE, Name}).
+-type name() :: term().
 
 %%%===================================================================
 %%% API
 %%%===================================================================
 
 %% Simple Moving Average (Time limited)
+-spec new_tsma(name(), pos_integer()) -> ok | {error, already_registred}.
 new_tsma(Name, FL) ->
     new(Name, exast_tsma, [Name, FL]).
 
 %% Simple Moving Average (Size limited)
+-spec new_ssma(name(), pos_integer()) -> ok | {error, already_registred}.
 new_ssma(Name, FL) ->
     new(Name, exast_ssma, [FL]).
 
 %% Cumulative Moving Average
+-spec new_cma(name()) -> ok | {error, already_registred}.
 new_cma(Name) ->
     new(Name, exast_cma, []).
 
+-spec new_gauge(name()) -> ok | {error, already_registred}.
 new_gauge(Name) ->
     new(Name, exast_gauge, [Name]).
 
@@ -51,7 +56,8 @@ get(Name) ->
 delete(Name) ->
     {Mod, State} = persistent_term:get(?KEY(Name)),
     Mod:delete(Name, State),
-    persistent_term:erase(?KEY(Name)).
+    persistent_term:erase(?KEY(Name)),
+    ok.
 
 %%%===================================================================
 %%% Internal
@@ -62,5 +68,5 @@ new(RegName, Module, Args) ->
             State = apply(Module, new, Args),
             persistent_term:put(?KEY(RegName), {Module, State});
         _ ->
-            error(already_registred)
+            {error, already_registred}
     end.
