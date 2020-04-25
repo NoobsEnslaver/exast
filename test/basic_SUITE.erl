@@ -28,7 +28,8 @@ all() ->
     [tsma_basic,
      ssma_basic,
      cma_basic,
-     gauge_basic].
+     gauge_basic,
+     counter_basic].
 
 
 %%--------------------------------------------------------------------
@@ -137,6 +138,26 @@ gauge_basic(_Config) ->
 
     exast:notify(N, <<"У попа была собака, он её любил">>),
     ?assertEqual(<<"У попа была собака, он её любил">>, exast:get(N)),
+
+    exast:delete(N),
+    ?assertError(badarg, exast:get(N)),
+
+    ok.
+
+counter_basic(_Config) ->
+    N = ?FUNCTION_NAME,
+    ok = exast:new_counter(N),
+    ?assertEqual({error, already_registred}, exast:new_counter(N)),
+
+    ?assertEqual(0, exast:get(N)),
+
+    Data = lists:seq(1, 100),
+    Sum = lists:sum(Data),
+    [exast:notify(N, X) || X <- Data],
+    ?assertEqual(Sum, exast:get(N)),
+
+    exast:notify(N, 0),
+    ?assertEqual(Sum, exast:get(N)),
 
     exast:delete(N),
     ?assertError(badarg, exast:get(N)),

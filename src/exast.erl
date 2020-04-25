@@ -12,8 +12,9 @@
          new_ssma/2,
          new_cma/1,
          new_gauge/1,
+         new_counter/1,
          notify/2,
-         get/1,
+         get/0, get/1,
          delete/1]).
 
 -define(KEY(Name), {?MODULE, Name}).
@@ -42,10 +43,18 @@ new_cma(Name) ->
 new_gauge(Name) ->
     new(Name, exast_gauge, [Name]).
 
+-spec new_counter(name()) -> ok | {error, already_registred}.
+new_counter(Name) ->
+    new(Name, exast_counter, []).
+
 -spec notify(term(), number()) -> ok.
 notify(Name, Value) ->
     {Mod, State} = persistent_term:get(?KEY(Name)),
     Mod:notify(State, Value).
+
+-spec get() -> [{name(), number()}].
+get() ->
+    [{Name, Mod:get(State)} || {?KEY(Name), {Mod, State}} <- persistent_term:get()].
 
 -spec get(term()) -> number().
 get(Name) ->
