@@ -13,9 +13,9 @@
 %% API
 -export([start_link/1,
          reg/2,
-         reg_metric/2,
+         reg_meter/2,
          unreg/2,
-         unreg_metric/2]).
+         unreg_meter/2]).
 
 %% gen_server callbacks
 -export([init/1,
@@ -25,7 +25,7 @@
          terminate/2]).
 
 -record(state, {tsma = #{}    :: #{pos_integer() => counters:counters_ref()},
-                metrics = [] :: [exast_metric:metric()]}).
+                meters = [] :: [exast_meter:meter()]}).
 
 %%%===================================================================
 %%% API
@@ -39,18 +39,18 @@ reg(Name, Counter) ->
     Hash = erlang:phash(Name, erlang:system_info(schedulers)),
     gen_server:cast(name(Hash), {reg, Counter}).
 
--spec reg_metric(term(), exast_metric:metric()) -> ok.
-reg_metric(Name, Metric) ->
+-spec reg_meter(term(), exast_meter:meter()) -> ok.
+reg_meter(Name, Meter) ->
     Hash = erlang:phash(Name, erlang:system_info(schedulers)),
-    gen_server:cast(name(Hash), {reg_metric, Metric}).
+    gen_server:cast(name(Hash), {reg_meter, Meter}).
 
 unreg(Name, Counter) ->
     Hash = erlang:phash(Name, erlang:system_info(schedulers)),
     gen_server:cast(name(Hash), {unreg, Counter}).
 
-unreg_metric(Name, Metric) ->
+unreg_meter(Name, Meter) ->
     Hash = erlang:phash(Name, erlang:system_info(schedulers)),
-    gen_server:cast(name(Hash), {unreg_metric, Metric}).
+    gen_server:cast(name(Hash), {unreg_meter, Meter}).
 %%%===================================================================
 %%% gen_server callbacks
 %%%===================================================================
@@ -67,8 +67,8 @@ handle_call(_Request, _From, State) ->
 handle_cast({reg, Ref}, #state{tsma = T} = State) ->
     #{size := FL} = counters:info(Ref),
     {noreply, State#state{tsma = T#{FL => [Ref | maps:get(FL, T, [])]}}};
-handle_cast({reg_metric, Metric}, #state{metrics = M} = State) ->
-    {noreply, State#state{metrics = [Metric | M]}};
+handle_cast({reg_meter, Meter}, #state{meters = M} = State) ->
+    {noreply, State#state{meters = [Meter | M]}};
 
 handle_cast({unreg, Ref}, #state{tsma = T} = State) ->
     #{size := FL} = counters:info(Ref),
@@ -77,13 +77,13 @@ handle_cast({unreg, Ref}, #state{tsma = T} = State) ->
              NewFLState -> T#{FL => NewFLState}
          end,
     {noreply, State#state{tsma = T1}};
-handle_cast({unreg_metric, Metric}, #state{metrics = M} = State) ->
-    {noreply, State#state{metrics = M -- [Metric]}};
+handle_cast({unreg_meter, Meter}, #state{meters = M} = State) ->
+    {noreply, State#state{meters = M -- [Meter]}};
 handle_cast(_Request, State) ->
     {noreply, State}.
 
 handle_info(tick, #state{tsma = T} = State) ->
-    handle_metrics(State),
+    handle_meters(State),
 
     Now = erlang:system_time(second) + 1,
     [counters:put(Ref, Idx, 0) || {FL, List} <- maps:to_list(T),
@@ -106,10 +106,10 @@ terminate(_Reason, _State) ->
 name(N) ->
     list_to_atom(lists:concat(["$exast_tick_server_", N])).
 
-handle_metrics(#state{metrics = Metrics}) ->
+handle_meters(#state{meters = Meters}) ->
     Now = erlang:system_time(second),
-    if Now rem 60 == 0  -> [exast_metric:tick_one(M) || M <- Metrics],
-    if Now rem 900 == 0 -> [exast_metric:tick_fifteen(M) || M <- Metrics];
+    if Now rem 60 == 0  -> [exast_meter:tick_one(M) || M <- Meters],
+    if Now rem 900 == 0 -> [exast_meter:tick_fifteen(M) || M <- Meters];
        true -> skip end;
        true -> skip end,
     ok.

@@ -13,7 +13,7 @@
          new_cma/1,
          new_gauge/1,
          new_counter/1,
-         new_metric/1,
+         new_meter/1,
          notify/2,
          get/0, get/1,
          delete/1]).
@@ -48,20 +48,20 @@ new_gauge(Name) ->
 new_counter(Name) ->
     new(Name, exast_counter, []).
 
--spec new_metric(name()) -> ok | {error, already_registred}.
-new_metric(Name) ->
-    new(Name, exast_metric, [Name]).
+-spec new_meter(name()) -> ok | {error, already_registred}.
+new_meter(Name) ->
+    new(Name, exast_meter, [Name]).
 
 -spec notify(term(), number()) -> ok.
 notify(Name, Value) ->
     {Mod, State} = persistent_term:get(?KEY(Name)),
     Mod:notify(State, Value).
 
--spec get() -> [{name(), number() | exast_metric:metric_ret()}].
+-spec get() -> [{name(), number() | exast_meter:meter_ret()}].
 get() ->
     [{Name, Mod:get(State)} || {?KEY(Name), {Mod, State}} <- persistent_term:get()].
 
--spec get(term()) -> number() | exast_metric:metric_ret().
+-spec get(term()) -> number() | exast_meter:meter_ret().
 get(Name) ->
     {Mod, State} = persistent_term:get(?KEY(Name)),
     Mod:get(State).
