@@ -1,0 +1,55 @@
+# -*- fill-column: 120; -*-
+
+
+* Description
+
+  Exast is an extremely fast erlang statistics library for simplest cases.
+
+* API
+
+  Data types:
+  - name() :: term()
+  - frame_length() :: pos_integer() (sec or count)
+  - value() :: integer() or term() for 'gauge'
+
+  | Name          | Args                   | Desc                                                                              |
+  |---------------+------------------------+-----------------------------------------------------------------------------------|
+  | new_tsma/2    | name(), frame_length() | Register new time-limited simple moving average with FL sec length                |
+  | new_ssma/2    | name(), frame_length() | Register new size-limited simple moving average with FL maximum number of entries |
+  | new_cma/1     | name()                 | Register new cumulative moving average                                            |
+  | new_gauge/1   | name()                 | Register new gauge                                                                |
+  | new_counter/1 | name()                 | Register new counter                                                              |
+  | new_meter/1   | name()                 | Register combined metric with 4 ma - 'one', 'five', 'fifteen', 'day'              |
+  | notify/2      | name(), value()        | Add value() to metric, or set in case of gauge                                    |
+  | get/0         |                        | Retern all metrics with values                                                    |
+  | get/1         | name()                 | Retrun value                                                                      |
+  | delete/1      | name()                 | Remove metric                                                                     |
+
+
+* Examples
+
+#+begin_src erlang
+  1> exast:new_ssma(test, 5).
+  ok
+  2> exast:get(test).
+  0.0
+  3> exast:notify(test, 10).
+  ok
+  4> exast:get(test).
+  2.0                                             %% (10 + 0 + 0 + 0 + 0) / 5 == 2.0
+  5> exast:notify(test, 20).
+  ok
+  6> exast:notify(test, 30).
+  ok
+  7> exast:notify(test, 40).
+  ok
+  8> exast:notify(test, 50).
+  ok
+  9> exast:get(test).
+  30.0                                            %% (10 + 20 + 30 + 40 + 50) / 5 == 30.0
+  10> exast:notify(test, 0).
+  ok
+  11> exast:get(test).
+  28.0                                            %% (20 + 30 + 40 + 50 + 0) / 5 == 28.0
+
+#+end_src
