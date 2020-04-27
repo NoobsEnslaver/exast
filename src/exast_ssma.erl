@@ -19,6 +19,7 @@
                frame_length :: pos_integer()}).
 
 -type ssma() :: #ssma{}.
+-export_type([ssma/0]).
 
 %%%===================================================================
 %%% API
