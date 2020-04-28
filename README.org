@@ -19,7 +19,7 @@
   | new_cma/1     | name()                 | Register new cumulative moving average                                            |
   | new_gauge/1   | name()                 | Register new gauge                                                                |
   | new_counter/1 | name()                 | Register new counter                                                              |
-  | new_meter/1   | name()                 | Register combined metric with 4 ma - 'one', 'five', 'fifteen', 'day'              |
+  | new_meter/1   | name()                 | Register combined metric with 4 'rate' - 'one', 'five', 'fifteen', 'day'          |
   | notify/2      | name(), value()        | Add value() to metric, or set in case of gauge                                    |
   | get/0         |                        | Retern all metrics with values                                                    |
   | get/1         | name()                 | Retrun value                                                                      |
