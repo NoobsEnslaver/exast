@@ -24,6 +24,7 @@
   | get/0         |                        | Retern all metrics with values                                                    |
   | get/1         | name()                 | Retrun value                                                                      |
   | delete/1      | name()                 | Remove metric                                                                     |
+  | new_rate/2    | name(), frame_length() | Register new periodic nullable counter to measure rate                            |
 
 
 * Examples
@@ -34,22 +35,32 @@
   2> exast:get(test).
   0.0
   3> exast:notify(test, 10).
-  ok
   4> exast:get(test).
   2.0                                             %% (10 + 0 + 0 + 0 + 0) / 5 == 2.0
   5> exast:notify(test, 20).
-  ok
   6> exast:notify(test, 30).
-  ok
   7> exast:notify(test, 40).
-  ok
   8> exast:notify(test, 50).
-  ok
   9> exast:get(test).
   30.0                                            %% (10 + 20 + 30 + 40 + 50) / 5 == 30.0
   10> exast:notify(test, 0).
-  ok
   11> exast:get(test).
   28.0                                            %% (20 + 30 + 40 + 50 + 0) / 5 == 28.0
+
+  12> FL = 10, ok = exast:new_rate(N, FL).
+  13> WorkerF = fun Loop()-> exast:notify(N, 10), timer:sleep(500), Loop() end.
+  14> ExpextedRate = 20.0.
+  15> MinRate = ExpextedRate - (ExpextedRate / FL).     % rate, as any time-limited datatype have precision 1/FL
+  16> Worker1 = spawn(WorkerF), timer:sleep(FL * 1100). % because last seconds data can be dpoped just before call 'get/1'
+  17> Rate0 = exast:get(N).
+  18> Rate0 >= MinRate and Rate0 =< ExpextedRate.
+  true
+  19> Worker2 = spawn(WorkerF),timer:sleep(FL * 1100).
+  20> Rate1 = exast:get(N).
+  21> Rate1 >= 2*MinRate and Rate1 =< 2*ExpextedRate.
+  true
+  22> exit(Worker1, kill), exit(Worker2, kill), timer:sleep(FL * 1100).
+  23> exast:get(N)
+  0.0
 
 #+end_src

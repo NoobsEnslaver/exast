@@ -14,6 +14,7 @@
          new_gauge/1,
          new_counter/1,
          new_meter/1,
+         new_rate/2,
          notify/2,
          get/0, get/1,
          delete/1]).
@@ -51,6 +52,9 @@ new_counter(Name) ->
 -spec new_meter(name()) -> ok | {error, already_registred}.
 new_meter(Name) ->
     new(Name, exast_meter, [Name]).
+
+new_rate(Name, FL) ->
+    new(Name, exast_rate, [Name, FL]).
 
 -spec notify(term(), number()) -> ok.
 notify(Name, Value) ->

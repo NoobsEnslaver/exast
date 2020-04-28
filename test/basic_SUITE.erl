@@ -25,12 +25,16 @@ end_per_suite(_Config) ->
     ok.
 
 all() ->
-    [tsma_basic,
-     ssma_basic,
-     cma_basic,
-     gauge_basic,
-     counter_basic].
+    [{group, basic}].
 
+groups() ->
+    [{basic, [parallel],
+      [tsma_basic,
+       ssma_basic,
+       cma_basic,
+       gauge_basic,
+       counter_basic,
+       rate_basic]}].
 
 %%--------------------------------------------------------------------
 tsma_basic(_Config) ->
@@ -162,4 +166,29 @@ counter_basic(_Config) ->
     exast:delete(N),
     ?assertError(badarg, exast:get(N)),
 
+    ok.
+
+rate_basic(_Config) ->
+    N = ?FUNCTION_NAME,
+    FL = 10,
+    ok = exast:new_rate(N, FL),
+    ?assertEqual({error, already_registred}, exast:new_rate(N, FL)),
+    ?assertEqual(0.0, exast:get(N)),
+
+    WorkerF = fun Loop()-> exast:notify(N, 10), timer:sleep(500), Loop() end,
+    ExpextedRate = 20.0,
+    MinRate = ExpextedRate - (ExpextedRate / FL),
+
+    Worker1 = spawn(WorkerF),
+    timer:sleep(FL * 1100),
+    Rate0 = exast:get(N),
+    ?assert(Rate0 >= MinRate andalso Rate0 =< ExpextedRate),
+    Worker2 = spawn(WorkerF),
+    timer:sleep(FL * 1100),
+    Rate1 = exast:get(N),
+    ?assert(Rate1 >= 2*MinRate andalso Rate1 =< 2*ExpextedRate),
+    exit(Worker1, kill),
+    exit(Worker2, kill),
+    timer:sleep(FL * 1100),
+    ?assertEqual(0.0, exast:get(N)),
     ok.
